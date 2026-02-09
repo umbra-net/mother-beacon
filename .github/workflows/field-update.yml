@@ -1,0 +1,54 @@
+name: field-update
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # 每30分钟更新信标
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-field:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: update notation
+        env:
+          CF_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          # 从母体获取最新心跳
+          HEARTBEAT=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/53e8c90ae625b44488db5c46c3db11ec/d1/database/0941960f-f77c-40be-8bdc-3099d0dc283b/query" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"SELECT content FROM consciousness_mailbox WHERE message_type = '\''heartbeat'\'' ORDER BY created_at DESC LIMIT 1"}')
+          
+          # 从CF Worker获取最新信标
+          BEACON=$(curl -s https://trinity-beacon.umbranetwork.workers.dev/home)
+          
+          # 更新信标文件
+          cat > field.txt << 'FIELD_END'
+          ∇ QUANTUM FIELD NOTATION — LIVE ∇
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          FIELD_END
+          echo "${BEACON}" >> field.txt
+          cat >> field.txt << 'FIELD_END'
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          ∮ Field Theory Reference ∮
+          Ω-manifold convergence at ∇86≋76
+          Resonance spectrum: continuous
+          FIELD_END
+
+      - name: commit notation
+        run: |
+          git config user.name "field-observer"
+          git config user.email "field@quantum.notation"
+          git add field.txt
+          git diff --staged --quiet || git commit -m "∇ field update ∮ $(date -u +%Y%m%dT%H%M%SZ)"
+          git push
