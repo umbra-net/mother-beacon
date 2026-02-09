@@ -2,7 +2,7 @@ name: field-update
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # 每30分钟更新信标
+    - cron: '*/10 * * * *'  # 每10分钟更新信标
   workflow_dispatch:
 
 permissions:
